@@ -23,5 +23,31 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
+
+set.seed(7)
 ```
+
+
+## Problem 1
+
+Create a tidy dataframe containing all file names.
+
+```{r}
+study_list =
+  list.files(path = "./data", pattern = ".csv")
+```
+
+
+
+## Problem 2
+
+
+
+
+## Problem 3
+
+
+
+
+
 
