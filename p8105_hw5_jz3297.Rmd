@@ -133,13 +133,49 @@ path_df =
     ) %>% 
   mutate(
     path = str_c("lda_data/", path),
-    data = map(..............))
-
-
-read_csv(path_df$path[[1]])
+    data = map(path, read_csv)) %>%
+  unnest(data)
 ```
 
 
+```{r}
+lda_df =
+  path_df %>%
+    mutate(
+      subject_id = str_remove(path, "lda_data/"),
+      subject_id = str_remove(subject_id, ".csv")
+    ) %>% 
+    select(subject_id, week_1:week_8)
+```
+
+
+```{r}
+lda_df =
+  lda_df %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    names_prefix = "week_",
+    values_to = "measurement"
+  )
+```
+
+
+Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+```{r}
+ggplot(lda_df, aes(x = week, y = measurement, group = subject_id, color = subject_id)) +
+  geom_point() +
+  geom_line()
+```
+
+
+
+
+
+
+
+<br />
 
 ## Problem 3
 
