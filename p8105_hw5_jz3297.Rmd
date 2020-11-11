@@ -93,16 +93,44 @@ results_df %>%
 
 
 
-## Problem 2
+```{r, error = TRUE}
+city_prop_test = function(df) {
+  
+  
+  n_unsolved ...
+  n_total ...
+  
+  prop.test()
+  
+  
+}
 
+
+homicide_df =
+  read_csv("data/homicide-data.csv") %>% 
+  mutate(
+    city_state = str_c(city, state, sep = "_"),
+    resolved = case_when(
+      disposition == "Closed without arrest" ~ "unsolved",
+      disposition == "Open/No arrest"        ~ "unsolved",
+      disposition == "Closed by arrest"      ~ "solved"
+    )
+  ) %>% 
+  select(city_state, resolved) %>% 
+  filter(city_state != "Tulsa_AL") %>% 
+  nest(data = resolved)
+```
+
+
+## Problem 2
 
 Create a tidy dataframe containing all file names.
 
 ```{r}
-file_names = list.files(path = "data")
-dir = paste("./data/", file_names, sep = "")
+file_names = list.files(path = "./study")
+dir = paste("./study", file_names, sep = "")
 
-output = 
+
 for (i in 1:length(dir)) {
   
   output[[i]] = read_csv(file = dir[i])
