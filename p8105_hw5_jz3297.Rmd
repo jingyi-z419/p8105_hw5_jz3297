@@ -24,7 +24,6 @@ options(
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 
-set.seed(7)
 ```
 
 
@@ -146,6 +145,8 @@ lda_df =
       subject_id = str_remove(subject_id, ".csv")
     ) %>% 
     select(subject_id, week_1:week_8)
+
+lda_df
 ```
 
 
@@ -158,6 +159,8 @@ lda_df =
     names_prefix = "week_",
     values_to = "measurement"
   )
+
+lda_df
 ```
 
 
@@ -171,16 +174,87 @@ ggplot(lda_df, aes(x = week, y = measurement, group = subject_id, color = subjec
 
 
 
-
-
-
-
 <br />
 
 ## Problem 3
 
+Create a function with fixed n =30, sigma = 5.
+
+```{r}
+sim_mean_t = function(n = 30, mu, sigma = 5) { #default sample size and sd
+  
+  sim_data =
+    tibble(
+     x = rnorm(n, mean = mu, sd = sigma)
+    )
+  
+  sim_data %>%
+    summarize(
+      mu_hat = mean(x),
+      t_test = t.test(x, mu = 0, conf.level = 0.95) %>% 
+        broom::tidy() %>% 
+        select(p.value)
+  )
+  
+}
+```
+
+Set mu = 0, generate 5000 dataset from a normal distribution.
+
+```{r}
+set.seed(7)
+sim_results =   
+  rerun(5000, sim_mean_t(mu = 0)) %>% 
+  bind_rows() %>% 
+  mutate(p_value = t_test$p.value) %>% 
+  select(mu_hat, p_value)
+
+sim_results
+```
+
+Repeat the same process for mu = 1,2,3,4,5,6
+
+```{r}
+set.seed(7)
+sim_results =
+  tibble(
+    mu = c(0, 1, 2, 3, 4, 5, 6)
+  ) %>% 
+  mutate(
+    output_lists = map(.x = mu, ~rerun(5000, sim_mean_t(mu = .x))),
+    estimate_results_df = map(output_lists, bind_rows)
+  ) %>% 
+  select(-output_lists) %>% 
+  unnest(estimate_results_df)
+
+sim_results =
+  sim_results %>% 
+  mutate(p_value = t_test$p.value) %>% 
+  select(mu_hat, p_value)
+
+sim_results
+```
+
+Make a plot showing the power of the test. Describe the association between effect size and power.
 
 
+```{r}
 
+```
+
+
+Make a plot showing the average estimate of mu hat on the y axis and the true value of mu on the x axis. 
+
+```{r}
+
+```
+
+Make a second plot showing the average estimate of mu hat only in samples for which the null was rejected on the y axis and the true value of mu on the x axis.
+
+```{r}
+
+```
+
+Is the sample average of mu across tests for which the null is rejected approximately equal to the true value of mu? Why or why not?
 
 
