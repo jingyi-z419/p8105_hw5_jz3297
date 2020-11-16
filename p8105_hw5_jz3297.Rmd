@@ -33,7 +33,7 @@ Read in the data.
 
 ```{r load_clean_data}
 homicide_df =
-  read_csv("homicide_data/homicide-data.csv") %>% 
+  read_csv("./homicide_data/homicide-data.csv") %>% 
   mutate(
     city_state = str_c(city, state, sep = "_"),
     resolved = case_when(
@@ -46,6 +46,8 @@ homicide_df =
   filter(city_state != "Tulsa_AL")
 ```
 
+<br />
+
 Let's look at this a bit.
 
 ```{r look_data}
@@ -56,7 +58,11 @@ aggregate_df =
     hom_total = n(),
     hom_unsolved = sum(resolved == "unsolved")
   )
+
+aggregate_df
 ```
+
+<br />
 
 Can I do a prop test for a single city?
 
@@ -66,6 +72,8 @@ prop.test(
   aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_total)) %>% 
   broom::tidy() # gives you a tidy version of statistical results
 ```
+
+<br />
 
 Try to iterate ......
 
@@ -79,7 +87,11 @@ results_df =
   select(-prop_tests) %>% 
   unnest(tidy_tests) %>%
   select(city_state, estimate, conf.low, conf.high)
+
+results_df
 ```
+
+<br />
 
 ```{r results_plot}
 results_df %>% 
@@ -90,23 +102,11 @@ results_df %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
+<br />
 
-
-```{r prop_function, error = TRUE}
-city_prop_test = function(df) {
-  
-  
-  n_unsolved ...
-  n_total ...
-  
-  prop.test()
-  
-  
-}
-
-
+```{r prop_function}
 homicide_df =
-  read_csv("data/homicide-data.csv") %>% 
+  read_csv("./homicide_data/homicide-data.csv") %>% 
   mutate(
     city_state = str_c(city, state, sep = "_"),
     resolved = case_when(
@@ -120,6 +120,7 @@ homicide_df =
   nest(data = resolved)
 ```
 
+<br />
 
 ## Problem 2
 
@@ -168,6 +169,7 @@ lda_df =
 lda_df
 ```
 
+<br />
 
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
 
@@ -189,6 +191,8 @@ subject_time_plot
 ```{r save plot1, include = FALSE}
 ggsave("./results_plot/subject_time_plot.pdf", subject_time_plot, width = 8, height = 7)
 ```
+
+* From the graph, both the experiment and control group had similar baseline measurements at week 1. The experiment group had showed an increase in measurements throughout eight weeks of experiment. In comparison to the control group, the measurements did not change significantly during this time interval. 
 
 <br />
 
@@ -215,6 +219,8 @@ sim_mean_t = function(n = 30, mu, sigma = 5) { #default sample size and sd
 }
 ```
 
+<br />
+
 Set mu = 0, generate 5000 dataset from a normal distribution.
 
 ```{r generate_mu_0}
@@ -227,6 +233,8 @@ sim_results =
 
 sim_results
 ```
+
+<br />
 
 Repeat the same process for mu = 1,2,3,4,5,6
 
@@ -250,6 +258,8 @@ sim_results =
 
 sim_results
 ```
+
+<br />
 
 Make a plot showing the power of the test. Describe the association between effect size and power.
 
@@ -281,7 +291,7 @@ power_test_plot
 ggsave("./results_plot/power_test_plot.pdf", power_test_plot, width = 9, height = 7)
 ```
 
-* The power increases as the effect size (mu) increases.
+* The power increases as the effect size (mu) increases. 
 
 <br />
 
@@ -345,4 +355,4 @@ ggsave("./results_plot/estimate_rej_plot.pdf", estimate_rej_plot, width = 9, hei
 
 Is the sample average of mu across tests for which the null is rejected approximately equal to the true value of mu? Why or why not?
 
-* 
+* For mu = 0,1,2,3, the sample average of mu for which the null is rejected departures from the true value of mu. For mu = 4,5,6, the sample average of mu for which the null is rejected is approximately equal to the true value of mu. This is because the power of the test increases as the effect size increases. In other words, the probability that a false null hypothesis is rejected increases as mu increases (effect size).
