@@ -4,7 +4,7 @@ author: Jingyi Zhang
 output: github_document
 ---
 
-```{r, include = FALSE}
+```{r set up, include = FALSE}
 library(tidyverse)
 library(rvest)
 
@@ -31,7 +31,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 Read in the data.
 
-```{r}
+```{r load_clean_data}
 homicide_df =
   read_csv("homicide_data/homicide-data.csv") %>% 
   mutate(
@@ -48,7 +48,7 @@ homicide_df =
 
 Let's look at this a bit.
 
-```{r}
+```{r look_data}
 aggregate_df =  
   homicide_df %>%
   group_by(city_state) %>%
@@ -60,7 +60,7 @@ aggregate_df =
 
 Can I do a prop test for a single city?
 
-```{r}
+```{r prop_test}
 prop.test(
   aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_unsolved),
   aggregate_df %>% filter(city_state == "Baltimore_MD") %>% pull(hom_total)) %>% 
@@ -69,7 +69,7 @@ prop.test(
 
 Try to iterate ......
 
-```{r}
+```{r iterate}
 results_df =
   aggregate_df %>% 
   mutate(
@@ -81,7 +81,7 @@ results_df =
   select(city_state, estimate, conf.low, conf.high)
 ```
 
-```{r}
+```{r results_plot}
 results_df %>% 
   mutate(city_state = fct_reorder(city_state, estimate)) %>%
   ggplot(aes(x = city_state, y = estimate)) +
@@ -92,7 +92,7 @@ results_df %>%
 
 
 
-```{r, error = TRUE}
+```{r prop_function, error = TRUE}
 city_prop_test = function(df) {
   
   
@@ -125,7 +125,7 @@ homicide_df =
 
 Create a tidy dataframe containing all file names.
 
-```{r, error = TRUE}
+```{r load_files}
 path_df =
   tibble(
     path = list.files(path = "lda_data"),
@@ -137,7 +137,7 @@ path_df =
 ```
 
 
-```{r}
+```{r tidy_data1}
 lda_df =
   path_df %>%
     mutate(
@@ -150,7 +150,7 @@ lda_df
 ```
 
 
-```{r}
+```{r tidy_data2}
 lda_df =
   lda_df %>% 
   pivot_longer(
@@ -159,7 +159,10 @@ lda_df =
     names_prefix = "week_",
     values_to = "measurement"
   ) %>% 
-  separate(subject_id, into = c("group", "id"), sep = "_")
+  separate(subject_id, into = c("group", "id"), sep = "_") %>% 
+  mutate(
+    group = str_replace_all(group, c("con" = "control", "exp" = "experiment"))
+  )
 
 
 lda_df
@@ -168,16 +171,24 @@ lda_df
 
 Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
 
-```{r}
+```{r subject_time_plot}
 subject_time_plot =
-  lda_df %>% 
-    unite(subject_id, group, id) %>% 
-    ggplot(aes(x = week, y = measurement, group = subject_id, color = subject_id)) +
-      geom_point() +
-      geom_line()
+  lda_df %>%
+  unite(subject_id, group, id, sep = "_", remove = FALSE) %>% 
+  ggplot(aes(x = week, y = measurement)) +
+  geom_path(aes(color = group, group = as.factor(subject_id))) +
+  labs(
+    title = "Measurement over time",
+    x = "Week",
+    y = "Measurement"
+  )
+  
+subject_time_plot
 ```
 
-
+```{r save plot1, include = FALSE}
+ggsave("./results_plot/subject_time_plot.pdf", subject_time_plot, width = 8, height = 7)
+```
 
 <br />
 
@@ -185,7 +196,7 @@ subject_time_plot =
 
 Create a function with fixed n = 30, sigma = 5.
 
-```{r}
+```{r create_function}
 sim_mean_t = function(n = 30, mu, sigma = 5) { #default sample size and sd
   
   sim_data =
@@ -196,7 +207,7 @@ sim_mean_t = function(n = 30, mu, sigma = 5) { #default sample size and sd
   sim_data %>%
     summarize(
       mu_hat = mean(x),
-      t_test = t.test(x, mu = mu, conf.level = 0.95) %>% 
+      t_test = t.test(x, mu = 0, conf.level = 0.95) %>% 
         broom::tidy() %>% 
         select(p.value)
   )
@@ -206,7 +217,7 @@ sim_mean_t = function(n = 30, mu, sigma = 5) { #default sample size and sd
 
 Set mu = 0, generate 5000 dataset from a normal distribution.
 
-```{r}
+```{r generate_mu_0}
 set.seed(7)
 sim_results =   
   rerun(5000, sim_mean_t(mu = 0)) %>% 
@@ -219,7 +230,7 @@ sim_results
 
 Repeat the same process for mu = 1,2,3,4,5,6
 
-```{r, cache = TRUE}
+```{r repaet_process, cache = TRUE}
 set.seed(7)
 sim_results =
   tibble(
@@ -242,7 +253,7 @@ sim_results
 
 Make a plot showing the power of the test. Describe the association between effect size and power.
 
-```{r}
+```{r power_test_plot}
 power_test_plot =
   sim_results %>%
   group_by(mu) %>%
@@ -266,9 +277,17 @@ power_test_plot =
 power_test_plot
 ```
 
+```{r save plot2, include = FALSE}
+ggsave("./results_plot/power_test_plot.pdf", power_test_plot, width = 9, height = 7)
+```
+
+* The power increases as the effect size (mu) increases.
+
+<br />
+
 Make a plot showing the average estimate of mu hat on the y axis and the true value of mu on the x axis. 
 
-```{r}
+```{r estimate_mu_plot}
 estimate_all_plot =
   sim_results %>% 
   group_by(mu) %>% 
@@ -277,21 +296,28 @@ estimate_all_plot =
   ) %>% 
   ggplot(aes(x = mu, y = mean_estimate, color = mu)) +
   geom_point() +
-  stat_smooth(method = "lm", se = FALSE, size = 0.2, alpha = 0.5, color = "red") +
+  geom_abline(aes(intercept = 0, slope = 1), color = "red", size = 0.2) +
   scale_x_continuous(limits = c(0,6), breaks = seq(0,6,1)) +
   scale_y_continuous(limits = c(-1,6), breaks = seq(-1,6,1)) +
   labs(
-    title = "Mean estimate of mu hat vs. true mu",
+    title = "Mean estimate of mu vs. true mu",
     x = "True mu",
-    y = "Mean estimate of mu hat"
+    y = "Mean estimate of mu"
   )
 
 estimate_all_plot
 ```
 
+
+```{r save plot3, include = FALSE}
+ggsave("./results_plot/estimate_all_plot.pdf", estimate_all_plot, width = 9, height = 7)
+```
+
+<br />
+
 Make a second plot showing the average estimate of mu hat only in samples for which the null was rejected on the y axis and the true value of mu on the x axis.
 
-```{r}
+```{r estimate_mu_rej_plot}
 estimate_rej_plot =
   sim_results %>% 
   group_by(mu) %>% 
@@ -301,18 +327,22 @@ estimate_rej_plot =
   ) %>% 
   ggplot(aes(x = mu, y = mean_estimate_rej, color = mu)) +
   geom_point() +
-  stat_smooth(method = "lm", se = FALSE, size = 0.2, alpha = 0.5, color = "red") +
+  geom_abline(aes(intercept = 0, slope = 1), color = "red", size = 0.2) +
   scale_x_continuous(limits = c(0,6), breaks = seq(0,6,1)) +
   scale_y_continuous(limits = c(-1,7), breaks = seq(-1,7,1)) +
   labs(
-    title = "Mean estimate of mu hat (rejected) vs. true mu",
+    title = "Mean estimate of mu(rejected) vs. true mu",
     x = "True mu",
-    y = "Mean estimate of mu hat (rejected)"
+    y = "Mean estimate of mu(rejected)"
   )
 
 estimate_rej_plot 
 ```
 
+```{r save plot4, include = FALSE}
+ggsave("./results_plot/estimate_rej_plot.pdf", estimate_rej_plot, width = 9, height = 7)
+```
+
 Is the sample average of mu across tests for which the null is rejected approximately equal to the true value of mu? Why or why not?
 
-
+* 
