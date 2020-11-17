@@ -236,7 +236,7 @@ sim_results
 
 <br />
 
-Repeat the same process for mu = 1,2,3,4,5,6
+Repeat the same process for mu = 1,2,3,4,5,6, test against null hypothesis mu = 0.
 
 ```{r repaet_process, cache = TRUE}
 set.seed(7)
@@ -291,7 +291,7 @@ power_test_plot
 ggsave("./results_plot/power_test_plot.pdf", power_test_plot, width = 9, height = 7)
 ```
 
-* The power increases as the effect size (mu) increases. 
+* The power increases as the effect size (mu) increases. As the true mu increases, the proportion of rejecting the null hypothesis (mu = 0) increases and approaches 1. 
 
 <br />
 
@@ -355,4 +355,4 @@ ggsave("./results_plot/estimate_rej_plot.pdf", estimate_rej_plot, width = 9, hei
 
 Is the sample average of mu across tests for which the null is rejected approximately equal to the true value of mu? Why or why not?
 
-* For mu = 0,1,2,3, the sample average of mu for which the null is rejected departures from the true value of mu. For mu = 4,5,6, the sample average of mu for which the null is rejected is approximately equal to the true value of mu. This is because the power of the test increases as the effect size increases. In other words, the probability that a false null hypothesis is rejected increases as mu increases (effect size).
+* For mu = 0,1,2,3, the sample average of mu for which the null is rejected deviates significantly from the true value of mu. For mu = 4,5,6, the sample average of mu for which the null is rejected is approximately equal to the true value of mu. This is because the power of the test increases as the effect size (true mu) increases. In other words, the probability that a false null hypothesis is rejected increases as mu increases (effect size).
